@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+		<meta charset="utf-8">
+		<title>test</title>
+		<script type="text/javascript" src="APIkey.js"></script>
+		<script type="text/javascript">
+			var countries, idx = 0;
+			window.onload = () => {
+				let now = new Date(),
+					year = 2019,
+					month  = now.getMonth()+1,
+					day = now.getDate()-1,
+					country = {
+						"code": "RU",
+						"name": "Russia"
+					}
+
+				let request = {
+					"year": year,
+					"month": month,
+					"day": day,
+					"country": country.code
+				};
+
+				getCountries()
+					.then(answer => {
+						countries = answer.countries;
+						hasEvent(request);
+					})
+			}
+
+			function hasEvent(req) {
+				getEvents(req)
+					.then(answer => {
+						if (answer.holidays.length <= 0) {
+							req.country = countries[idx].code;
+							display("", countries[idx].code, "");
+							idx++;
+							hasEvent(req);
+						} else {
+							display(
+								req.year + "-" + req.month + "-" + (req.day+1),
+								req.country,
+								answer.holidays
+							)
+						}
+					})
+			}
+
+			function display(date, country, events) {
+				let aboutCountry = countries.filter((n)=>{
+					return n.code == country
+				})
+
+				document.querySelector("#date").innerText = date;
+				document.querySelector("#cntr").innerText = aboutCountry[0].name;
+
+				if (events == "") { return false; }
+				document.querySelector("#evnt").innerText += events[0].name;
+			}
+
+			async function getEvents(options) {
+				let link = "https://holidayapi.com/v1/holidays?key=" + API_KEY;
+
+				for(opt in options) {
+					link += "&" + opt + "=" + options[opt];
+				}
+
+				return fetch(link)
+						.then( resp => resp.json() )
+			}
+
+			async function getCountries() {
+				let link = "https://holidayapi.com/v1/countries?key=" + API_KEY;
+				return fetch(link)
+						.then( resp => resp.json() )
+			}
+		</script>
+		<style type="text/css">
+			body {
+				height: 100vh;
+				width: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				overflow: hidden;
+			}
+			#card {
+				width: 200px;
+				height: auto;
+				border-radius: 10px;
+				background-color: pink;
+			}
+
+			#card div {
+				padding: 10px 0;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#card #title {
+				width: 100%;
+				height: auto;
+				border-bottom: 1px solid black;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="card">
+			<div id="title">Мероприятие</div>
+			<div id="date"></div>
+			<div id="cntr"></div>
+			<div id="evnt"></div>
+		</div>
+	</body>
+</html>
